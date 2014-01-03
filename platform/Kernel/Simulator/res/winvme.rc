@@ -1,0 +1,158 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_COLOR_240x320H      BITMAP  DISCARDABLE     "color_240x320H.bmp"
+IDB_BW_96X40            BITMAP  DISCARDABLE     "bw_96X40.bmp"
+IDB_BW_128X32           BITMAP  DISCARDABLE     "bw_128X32.bmp"
+IDB_BW_128X64           BITMAP  DISCARDABLE     "bw_128X64.bmp"
+IDB_COLOR_128X128       BITMAP  DISCARDABLE     "color_128X128.bmp"
+IDB_COLOR_128x160       BITMAP  DISCARDABLE     "color_128x160.bmp"
+IDB_COLOR_128x160H      BITMAP  DISCARDABLE     "color_128x160H.bmp"
+IDB_COLOR_176X220       BITMAP  DISCARDABLE     "color_176X220.bmp"
+IDB_COLOR_176x220H      BITMAP  DISCARDABLE     "color_176x220H.bmp"
+IDB_COLOR_240x320       BITMAP  DISCARDABLE     "color_240x320.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_RBUTTON_POPUP MENU DISCARDABLE 
+BEGIN
+    POPUP "System"
+    BEGIN
+        MENUITEM "Close",                       IDM_CLOSE
+    END
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "anyka\0"
+            VALUE "FileDescription", "Spotlight\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "Spotlight\0"
+            VALUE "LegalCopyright", "Copyright ? 2013\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "Spotlight.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "anyka Spotlight\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    MSG_VMEENG_ERR_CANNOT_OPEN_V24 
+                            "Configured Com-Port for the VME V.24 interface cannot be opened.\n\nPlease check """"global_config.h"""" for configuration."
+    MSG_VMEENG_ERR_CANNOT_OPEN_ATC1 
+                            "Configured Com-Port for the VME VATC1 interface cannot be opened.\n\nPlease check """"global_config.h"""" for configuration."
+    MSG_VMEENG_ERR_CANNOT_OPEN_ATC2 
+                            "Configured Com-Port for the VME VATC2 interface cannot be opened.\n\nPlease check """"global_config.h"""" for configuration."
+    MSG_VMEENG_ERR_CANNOT_OPEN_ATC3 
+                            "Configured Com-Port for the VME VATC3 interface cannot be opened.\n\nPlease check """"global_config.h"""" for configuration."
+    MSG_ERR_UNKNONW         "MSG_ERR_UNKNONW"
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
