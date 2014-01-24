@@ -38,7 +38,7 @@ const T_U16 s_RtcPath[]= {'B',':','/','t','i','m','e','.','t','x','t','\0'};
 const T_U16 s_RtcPath[]= {'A',':','/','t','i','m','e','.','t','x','t','\0'};
 #endif
 
-static T_BOOL usbstate;//    
+static T_BOOL usbstate;//  
 
 void usbdisk_changeRtc(void)
 {

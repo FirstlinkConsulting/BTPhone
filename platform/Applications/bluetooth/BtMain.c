@@ -1,22 +1,19 @@
 
 
-#include"ba_user_msg.h"
-#include"anyka_types.h"
-#include"vme.h"
-#include"m_event.h"
-#include"ba_lib_api.h"
-#include"Eng_BtCtrl.h"
-#include"eng_debug.h"
-#include"m_event_api.h"
-#include"Eng_BtPlayer.h"
-#include"Eng_BtPhone.h"
-#include"BtDev.h"
-#include"ba_hfp.h"
-#include"Eng_VoiceTip.h"
-#include"fwl_timer.h"
-
-
-
+#include "ba_user_msg.h"
+#include "anyka_types.h"
+#include "vme.h"
+#include "m_event.h"
+#include "ba_lib_api.h"
+#include "Eng_BtCtrl.h"
+#include "eng_debug.h"
+#include "m_event_api.h"
+#include "Eng_BtPlayer.h"
+#include "Eng_BtPhone.h"
+#include "BtDev.h"
+#include "ba_hfp.h"
+#include "Eng_VoiceTip.h"
+#include "fwl_timer.h"
 
 
 extern T_BOOL isinBtDev(T_VOID);
@@ -328,7 +325,8 @@ T_S32 A2DP_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 			if(BtPlayer_IsWorking())
 			#endif
 			{
-				BtPlayer_LoadSBCData((T_U8 *)param1, (T_U16)param2);
+				BtPlayer_LoadSBCData((T_U8 *)param1, (T_U16)param2);
+
 			}
 			#ifdef SUPPORT_VOICE_TIP
 			else if(!Voice_IsWroking() && !BtPhone_IsWorking())

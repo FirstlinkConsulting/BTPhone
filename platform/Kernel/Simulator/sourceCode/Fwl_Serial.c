@@ -24,6 +24,7 @@ BYTE UartBuf[4096];
 T_U32 uart_read_byte(T_eUART_ID id, T_U8 *buf, T_U32 size);
 T_BOOL uart_reset(T_eUART_ID id, T_eUART_BAUDRATE baud_rate);
 CRITICAL_SECTION cs;
+
 DWORD __stdcall SerialSendHandle(PVOID pParam) 
 {
 	DWORD size;
