@@ -292,7 +292,8 @@ T_BOOL BtCtrl_LibInit(T_BTDEV_INFO * btdev_crl, BA_CALLBACK_FUN_USER_MSG MsgCB)
 	input.info.strVersion = BA_LIB_VERSION_STRING;
 	input.info.msPerTick = 1;//对应input.cb_fun.GetTick设置
 	input.info.msLinkSupervisionTimeout = 2000;//设置音箱断电后,手机反应时间
-	
+	input.info.msPageTimeout = 5000;
+
 	//input.info.msPageTimeout = 5120;//系统连接超时设置默认5120
 #ifdef OS_WIN32
 	input.info.TransportRxBufFreeSize = 32*1024;

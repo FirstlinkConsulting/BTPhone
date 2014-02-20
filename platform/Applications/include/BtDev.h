@@ -45,6 +45,9 @@
 #define MIN_DEC_VOL			0
 #define DEC_VOL_INTERVAL	64
 
+#define DEVICE_CLASS_IS_PHONE	0x00000200
+
+
 typedef enum
 {
 	eREMOTE_CONNECT = 0,
@@ -77,6 +80,14 @@ typedef struct
 	T_U32 a2dpCurVol;
 } T_BTDEV_CTRL;
 
+/**
+ * @BRIEF	check if the reomter device is the phone device class
+ * @AUTHOR	lizhenyi
+ * @DATE	2014-03-11
+ * @PARAM  T_VOID
+ * @RETURN	T_BOOL
+ */
+T_BOOL remoteDeviceIsPhone(T_VOID);
 
 /**
  * @BRIEF	we start connect  if there is some event which we think we can start connect . 
@@ -251,7 +262,7 @@ T_VOID BtDev_SaveConfig(T_VOID);
  * @RETURN	T_VOID
  * @RETVAL	
  */
-T_VOID BtDev_TryConnectCurDev(T_VOID);
+T_VOID BtDev_TryConnectCurDev(T_TIMER timer_id, T_U32 delay);
 
 /**
  * @BRIEF	when remote device delete linkkey,we have to delete dev info from local spi

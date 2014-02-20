@@ -419,24 +419,26 @@ static T_VOID gpio_dispatch_int(T_U32 pin, T_U8 polarity)
     //长按POWERKEY 4s芯片会自动关机，在此取消芯片关机
     if ((POWERKEY_GPIO == pin) && (LEVEL_HIGH == polarity))
     {
+		#if (SWITCH_MODE_SLIDE == 1)
         REG32(REG_PMU_CTRL1) &= ~PMU_HW_PD_GATE_DIS;
         REG32(REG_PMU_CTRL1) |=  PMU_HW_PD_GATE_DIS;
+		#endif
     }
 
     if ((USB_DETECT_GPIO == pin) && (LEVEL_HIGH == polarity))
     {
         pmu_ldo12_sel(CORE12_12V);
     }
-#ifndef BURN_TOOL
+
+#if (DETECT_DEV_MAX >0)
     gpio_int_detect_chk(pin, polarity);
+#endif
 #if (DRV_SUPPORT_KEYPAD > 0)
     keypad_scan_start_chk(pin, polarity);
 #endif
-#endif
-
 
     gpio_int_polarity(pin, (1 - polarity));
-    gpio_int_enable(pin, AK_TRUE);
+    //gpio_int_enable(pin, AK_TRUE);
 }
 
 #ifndef BURN_TOOL

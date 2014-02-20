@@ -843,9 +843,9 @@ T_VOID Fwl_CheckPowerStatus(T_VOID)
     if (LEVEL_HIGH != gpio_get_pin_level(USB_DETECT_GPIO))
     {
     	delay_ms(100);//电池启动时，SPK 脚有120 ms的高电平,且设了GPIO 输出低电平也不管用
-		for(j = 0, voltage = 0; j < 3; j ++)
+		for(j = 0; j < 3; j ++)
 		{
-	        for (i = 0; i < 6; i++)
+	        for (i = 0, voltage = 0; i < 6; i++)
 	        {
 	            tmp = analog_getvoltage_bat();
 	            voltage += tmp;
@@ -871,6 +871,7 @@ T_VOID Fwl_CheckPowerStatus(T_VOID)
 	 {
 		 AK_PRINTK("cv: ", voltage, AK_TRUE);
 		 rtc_enable_in_pwd(AK_FALSE);
+		 pmu_dipswitch_enable(AK_FALSE);
 		 soft_power_off();
 	 }
  }

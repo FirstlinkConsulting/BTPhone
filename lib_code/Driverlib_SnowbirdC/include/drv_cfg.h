@@ -60,6 +60,9 @@
 #define DRV_SUPPORT_KEYPAD        SUPPORT_KEYPAD  /*- Whether support keypad -*/
 
 
+#define DRV_SUPPORT_EFUSE         SUPPORT_EFUSE  /*-- Whether support efuse --*/
+
+
 #define DRV_SUPPORT_I2C           SUPPORT_I2C  /*---- Whether support i2c ----*/
 
 

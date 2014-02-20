@@ -447,5 +447,17 @@ T_S32 DrvModule_WaitEvent(E_DRV_MODULE module, T_U32 event, T_U32 timeout)
         return DRV_MODULE_SUCCESS;
     }
 }
+
+/**
+* @brief  get sepcifical event value
+* @author wang_miao
+* @data 2013-09-22
+* @return T_S32 
+*/
+T_U32 DrvModule_GetEventValue(void)
+{
+    return m_drv_module[DRV_MODULE_USB_DISK].eGroup.events;
+}
+
 #pragma arm section code 
 

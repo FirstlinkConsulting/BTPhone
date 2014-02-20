@@ -48,6 +48,7 @@ typedef struct
     T_fUSB_TX_FINISH_CALLBACK TX_Finish; 
     T_U8  *EP_TX_Buffer;
     T_U8  L2_Buf_ID;
+    T_BOOL bDmaStart;
 }USB_EP_TX;
 
 typedef struct
@@ -119,6 +120,7 @@ static T_U32  usb_slave_ctrl_in(T_U8 *data, T_U32 len);
 static T_U32  usb_slave_ctrl_out(T_U8 *data);
 static T_BOOL usb_slave_ctrl_callback(T_U8 req_type);
 T_U32 usb_slave_intr_handler_inner(T_VOID);
+static T_U32 usb_slave_dma_stop(EP_INDEX EP_index);
 
 
 #pragma arm section zidata = "_udisk_bss_"
@@ -453,12 +455,67 @@ static T_VOID usb_slave_reset(T_VOID)
     REG8(USB_REG_INTRUSBE) = 0xFF & (~USB_INTR_SOF);      //disable the sof interrupt
 }
 
+#ifdef DMA_TRANS_MODE
+
+static T_U32 usb_slave_dma_stop(EP_INDEX EP_index)
+{
+    if(EP2_INDEX == EP_index)
+    {
+        if(usb_slave.ep[EP_index].tx.bDmaStart)
+        {
+            REG8(USB_REG_INDEX) = USB_EP2_INDEX;
+            REG8(USB_REG_TXCSR2) = 0;
+            REG32(USB_DMA_CNTL_1) = 0;
+            REG32(USB_DMA_COUNT_1) = 0;
+            usb_slave.ep[EP_index].tx.bDmaStart = AK_FALSE;
+            ldma_trans_stop();
+        }
+    }
+    else if(EP3_INDEX == EP_index)
+    {
+        if(usb_slave.ep[EP_index].rx.bDmaStart)
+        {
+            REG8(USB_REG_INDEX) = USB_EP3_INDEX;
+            REG8(USB_REG_RXCSR2) = 0;
+            REG32(USB_DMA_CNTL_2) = 0;
+            REG32(USB_DMA_COUNT_2) = 0;
+            usb_slave.ep[EP_index].rx.bDmaStart = AK_FALSE;
+            ldma_trans_stop();
+        }
+    }
+
+}
+
+#endif
+
 
 //******************************************************************************
 T_VOID usb_slave_set_ep(T_U32 EP_index, T_U8 ep_attribute, T_U8 ep_type, T_U16 wMaxPacketSize)
 {
     T_U32 fifo_size;
     T_U8 tmp;
+
+#ifdef DMA_TRANS_MODE
+    usb_slave_dma_stop(EP_index);
+#endif
+
+    //clear status
+    if(USB_EP_IN_TYPE == ep_type)
+    {
+        usb_slave.ep[EP_index].tx.bDmaStart = AK_FALSE;
+        usb_slave.ep[EP_index].tx.EP_TX_Buffer = 0;
+        usb_slave.ep[EP_index].tx.EP_TX_Count= 0;
+        usb_slave.ep[EP_index].tx.EP_TX_State = EP_TX_FINISH;
+        usb_slave.ep[EP_index].tx.L2_Buf_ID = 0;
+    }
+    else
+    {
+        usb_slave.ep[EP_index].rx.bDmaStart = AK_FALSE;
+        usb_slave.ep[EP_index].rx.EP_RX_Buffer = 0;
+        usb_slave.ep[EP_index].rx.EP_RX_Count = 0;
+        usb_slave.ep[EP_index].rx.EP_RX_State = EP_RX_FINISH;
+        usb_slave.ep[EP_index].rx.L2_Buf_ID = 0;
+    }
 
     //select the ep
     REG8(USB_REG_INDEX) = EP_index;             /* select this EP */
@@ -554,6 +611,7 @@ static T_VOID usb_slave_suspend(T_VOID)
 
 
 #pragma arm section code = "_udisk_rw_"
+
 static T_U32 usb_slave_dma_start(EP_INDEX EP_index)
 {
     T_U32 ret,res;
@@ -580,6 +638,8 @@ static T_U32 usb_slave_dma_start(EP_INDEX EP_index)
     usb_slave.ep[tx_index].tx.EP_TX_Count -= ret;
     usb_slave.ep[tx_index].tx.EP_TX_Buffer += ret;
     usb_slave.ep[tx_index].tx.EP_TX_State = EP_TX_SENDING;
+
+    usb_slave.ep[EP2_INDEX].tx.bDmaStart = AK_TRUE;
     
     REG32(USB_DMA_CNTL_1) = (USB_ENABLE_DMA | USB_DIRECTION_TX | USB_DMA_MODE1 | USB_DMA_INT_ENABLE | (EP_index<<4) | USB_DMA_BUS_MODE3);
     return ret;
@@ -1734,6 +1794,7 @@ T_U32 usb_slave_intr_handler_inner(T_VOID)
 
     if((intr_ep & EP2_DMA_INTR) == EP2_DMA_INTR)
     {
+        usb_slave.ep[EP2_INDEX].tx.bDmaStart = AK_FALSE;
         usb_slave_tx_handler(EP2_INDEX);
     }
 

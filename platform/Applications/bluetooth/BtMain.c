@@ -16,6 +16,8 @@
 #include "fwl_timer.h"
 
 
+
+extern T_VOID BtDev_ConnectTask(T_TIMER timer_id, T_U32 delay);
 extern T_BOOL isinBtDev(T_VOID);
 extern T_BOOL Blue_IsExitBtPhone(T_VOID);
 extern T_VOID Blue_SetExitBtPhone(T_BOOL exit);
@@ -26,9 +28,34 @@ T_BOOL g_HFPSCO = AK_FALSE;//sco是否建立
 T_BOOL g_ExitBtPhone = AK_TRUE;//是否已经发送退出通话
 T_U32  g_ProcessTicks = 0;//执行ba_process的最大时间，目前只在断开阶段使用
 T_TIMER ProcessDelay = ERROR_TIMER;
+static T_TIMER SCOCntedCheck = ERROR_TIMER;
 extern T_BOOL g_test_mode;
 
 #pragma arm section code = "_SYS_BLUE_HFP_CODE_"
+
+/**
+ * @BRIEF	when connected with a non-phone device ,check the sco link is built after call ongoing, 
+ 			if link is not existed, initialize a SCO connection. this for mass production test.
+ * @AUTHOR	lizhenyi
+ * @DATE	2014-02-11
+ * @PARAM	timer_id
+			delay
+ * @RETURN	T_VOID
+ * @RETVAL	
+ */
+static T_VOID Blue_DelaySCOCheck(T_TIMER timer_id, T_U32 delay)
+{
+
+	if((g_HFPSCO != AK_TRUE) && !remoteDeviceIsPhone())
+	{
+		akerror("Device create a sco link to remote device ",0,1);
+		BA_HFP_ConnectSCO();
+	}
+	
+	SCOCntedCheck = ERROR_TIMER;
+}
+
+
 /**
  * @BRIEF	deal with hfp msg 
  * @AUTHOR	zhuangyuping
@@ -73,9 +100,9 @@ T_S32 HFP_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 						if(BtCtrl_HaveService(eBTDEV_HFP_SERVICE))//如果当初有连接表示此时是因为断开连接而处于的断开状态
 						{
 							T_BOOL flag = BtPhone_IsWorking();
-							BtCtrl_DelService(eBTDEV_HFP_SERVICE);
 							akerror("BA_HFP_PHONE_DISCONNECTED",0,1);
 							BtPhone_DeInit();
+							BtCtrl_DelService(eBTDEV_HFP_SERVICE);
 							if(!Blue_IsExitBtPhone() && flag)
 							{					
 								VME_EvtQueuePut(M_EVT_EXIT, AK_NULL);
@@ -182,6 +209,12 @@ T_S32 HFP_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 							VME_EvtQueuePut(VME_EVT_STOP_RING, AK_NULL);
 							#endif
 							VME_EvtQueuePut(VME_EVT_ACCEPT_PHONE, AK_NULL);
+							
+							if(SCOCntedCheck == ERROR_TIMER)
+							{
+								SCOCntedCheck = Fwl_TimerStart(500, AK_FALSE, Blue_DelaySCOCheck);
+							}
+							
 						}
 						break;
 
@@ -326,7 +359,6 @@ T_S32 A2DP_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 			#endif
 			{
 				BtPlayer_LoadSBCData((T_U8 *)param1, (T_U16)param2);
-
 			}
 			#ifdef SUPPORT_VOICE_TIP
 			else if(!Voice_IsWroking() && !BtPhone_IsWorking())
@@ -572,7 +604,7 @@ T_S32 MGR_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 	{
 	case MGR_ACL_CONNECTION_REQUEST:
 		{
-			BtDev_SetRemoteClassOfDevice((T_U8*)param1,(T_U32)param2);	
+			BtDev_SetRemoteClassOfDevice((T_U8*)param1,(T_U32)param2);		
 			VME_EvtQueuePut(VME_EVT_SAVE_DEVINFO, AK_NULL);	
 		}
 		break;
@@ -587,13 +619,12 @@ T_S32 MGR_BALib2UserMsg(T_BA_USER_MSG msg, T_S32 param1, T_S32 param2)
 					#ifdef SUPPORT_VOICE_TIP
 					BtDev_PlayTip(eBTCTRL_RECONNECTING);
 					#endif
-					BtCtrl_SetCurStatus(eBTCTRL_RECONNECTING);
-					VME_EvtQueuePut(VME_EVT_RECONNECT_SERVICE,0);
+					Fwl_TimerStart(5000, AK_FALSE,BtDev_ConnectTask);
 				}
 				else if(BtDev_IsDelLinkKey())
 				{
 					//如果是因为远端设备linkkey丢失，我们会重新尝试重连此设备
-					VME_EvtQueuePut(VME_EVT_TRY_RECONNECT_SERVICE,0);
+					Fwl_TimerStart(2000, AK_FALSE,BtDev_TryConnectCurDev);
 				}
 				else
 				{

@@ -49,6 +49,29 @@ T_BOOL isinBtDev(T_VOID)
 }
 
 /**
+ * @BRIEF	check if the reomter device is the phone device class
+ * @AUTHOR	lizhenyi
+ * @DATE	2014-03-11
+ * @PARAM  T_VOID
+ * @RETURN	T_BOOL
+ */
+
+T_BOOL remoteDeviceIsPhone(T_VOID)
+{
+	T_U32 remoteClass = gBtDevCtrl->RemoteInfo.Info.classofDevice;
+	
+	if((remoteClass&0x00001F00) == DEVICE_CLASS_IS_PHONE)
+	{
+		return AK_TRUE;
+	}
+	else
+	{
+		return AK_FALSE;
+	}
+}
+
+
+/**
  * @BRIEF	check if we can send iphone's bat
  * @AUTHOR	zhuangyuping
  * @DATE	2012-05-23
@@ -602,9 +625,11 @@ T_VOID BtDev_EventConnect(T_CONNECT_EVENT event)
 			BtDev_DestroyConfig();
 			return ;
 		}
-		//如果没有超时，就再发起当前设备重连
-		BtDev_DisConnect();
-		info = &gBtDevCtrl->RemoteInfo.Info;
+		else
+		{
+	        BtDev_CheckConnect(5000);
+			return;
+		}
 	}
 	else
 	{
@@ -686,6 +711,12 @@ void BtDev_Connect(T_CONNECT_TYPE type)
 	}
 
 }
+T_VOID BtDev_ConnectTask(T_TIMER timer_id, T_U32 delay)
+{
+	akerror("VME_EVT_RECONNECT_SERVICE",0,1);
+	BtCtrl_SetCurStatus(eBTCTRL_RECONNECTING);
+	BtDev_Connect(eOUTOFAREA_CONNECT);//远离服务区的重连
+}
 
 /**
  * @BRIEF	when remote device delete linkkey,we have to retry to connect curdev again
@@ -695,8 +726,9 @@ void BtDev_Connect(T_CONNECT_TYPE type)
  * @RETURN	T_VOID
  * @RETVAL	
  */
-T_VOID BtDev_TryConnectCurDev(T_VOID)
+T_VOID BtDev_TryConnectCurDev(T_TIMER timer_id, T_U32 delay)
 {
+	akerror("VME_EVT_TRY_RECONNECT_SERVICE",0,1);
 	BtCtrl_Connect(&gBtDevCtrl->RemoteInfo.Info);
 	gBtDevCtrl->DelLinkKey = AK_FALSE;
 }

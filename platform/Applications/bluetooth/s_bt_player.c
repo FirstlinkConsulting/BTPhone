@@ -27,6 +27,7 @@
 
 
 
+extern T_VOID BtDev_ConnectTask(T_TIMER timer_id, T_U32 delay);
 
 extern T_BOOL isinBtDev(T_VOID);
 void stdb_ChangeMode(void);
@@ -233,18 +234,6 @@ unsigned char handlebt_player(T_EVT_CODE event, T_EVT_PARAM *pEventParm)
 				akerror("VME_EVT_CONNECT_AVRCP",connectevent,1);
 				BtDev_EventConnect(connectevent);
 			}
-		}
-		break;
-	case VME_EVT_RECONNECT_SERVICE:
-		{
-			akerror("VME_EVT_RECONNECT_SERVICE",0,1);
-			BtDev_Connect(eOUTOFAREA_CONNECT);//远离服务区的重连
-		}
-		break;
-	case VME_EVT_TRY_RECONNECT_SERVICE:
-		{
-			akerror("VME_EVT_TRY_RECONNECT_SERVICE",0,1);
-			BtDev_TryConnectCurDev();//we get delete linkkey msg and we will try reconnect again
 		}
 		break;
 	case VME_EVT_BLUEA_TIMEOUT:

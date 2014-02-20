@@ -19,6 +19,7 @@
 #define TIMER_NUM_MAX               6    
 #define TIMER_INACTIVE              0       /* inactive(available) */
 #define TIMER_ACTIVE                1       /* active(vailable) */
+#define TIMER_INTERVAL              10       
 
 
 typedef struct
@@ -26,13 +27,14 @@ typedef struct
     T_U8    vtimer_state:7;                 /* TIMER_INACTIVE or TIMER_ACTIVE */
     T_U8    vtimer_loop:1;                  /* loop or not */
     T_U32   vtimer_delay;
-    T_TIMER drvtimer_id;
+    T_U32   vtimer_time;
     T_fVTIMER_CALLBACK  callback_func;  /* callback function only for current timer */
 } T_TIMER_DATA;
 
 
 #pragma arm section zidata = "_bootbss1_"
 static volatile T_TIMER_DATA vtimer_data[TIMER_NUM_MAX];
+static volatile T_TIMER drvtimer_id = ERROR_TIMER;
 #pragma arm section zidata
 
 
@@ -74,11 +76,12 @@ T_VOID Fwl_TimerInit(T_VOID)
 
     for (i=0; i<TIMER_NUM_MAX; i++)
     {
-        vtimer_data[i].drvtimer_id   = ERROR_TIMER;
         vtimer_data[i].vtimer_state  = TIMER_INACTIVE;
-        vtimer_data[i].callback_func = AK_NULL;
-        vtimer_data[i].vtimer_delay  = 0;
+        //vtimer_data[i].callback_func = AK_NULL;
+        //vtimer_data[i].vtimer_delay  = 0;
+		//vtimer_data[i].vtimer_time = 0;
     }
+	drvtimer_id = timer_start(TIMER_INTERVAL, AK_TRUE, AK_NULL);
 }
 #pragma arm section code
 
@@ -104,7 +107,7 @@ static T_TIMER vtimer_start(T_U16 ms, T_BOOL loop, T_fVTIMER_CALLBACK callback_f
 {
     T_U32 i;
 
-    if (ms == 0 || callback_func == AK_NULL)
+    if (ms == 0 || callback_func == AK_NULL || drvtimer_id == ERROR_TIMER)
     {
         return ERROR_TIMER;
     }
@@ -128,15 +131,7 @@ static T_TIMER vtimer_start(T_U16 ms, T_BOOL loop, T_fVTIMER_CALLBACK callback_f
     vtimer_data[i].vtimer_loop   = loop;
     vtimer_data[i].vtimer_delay  = ms;
     vtimer_data[i].callback_func = callback_func;
-    vtimer_data[i].drvtimer_id   = timer_start(ms, loop, AK_NULL);
-
-    if (ERROR_TIMER == vtimer_data[i].drvtimer_id)
-    {
-        vtimer_data[i].vtimer_state = TIMER_INACTIVE;
-        vtimer_data[i].vtimer_delay = 0;
-        vtimer_data[i].vtimer_loop = AK_FALSE;
-        return ERROR_TIMER;
-    }
+	vtimer_data[i].vtimer_time = 0;
 
     return i;
 }
@@ -160,9 +155,6 @@ static T_TIMER vtimer_stop(T_TIMER timer_id)
         return ERROR_TIMER;
 
     vtimer_data[timer_id].vtimer_state = TIMER_INACTIVE;
-
-    timer_stop(vtimer_data[timer_id].drvtimer_id);
-    vtimer_data[timer_id].drvtimer_id = ERROR_TIMER;
 
     return ERROR_TIMER;
 }
@@ -280,15 +272,21 @@ T_VOID Fwl_TimerMsgDeal(T_TIMER timerId, T_U32 deley)
 
     for (vtimer_id=0; vtimer_id<TIMER_NUM_MAX; vtimer_id++)
     {
-        if ((timerId == vtimer_data[vtimer_id].drvtimer_id) && 
-            (TIMER_ACTIVE == vtimer_data[vtimer_id].vtimer_state))
+        if (TIMER_ACTIVE == vtimer_data[vtimer_id].vtimer_state)
         {
-        	if(vtimer_data[vtimer_id].vtimer_loop == AK_FALSE)
-    		{
-    			vtimer_data[vtimer_id].vtimer_state = TIMER_INACTIVE;
-    		}
-            vtimer_data[vtimer_id].callback_func(vtimer_id, deley);
-            break;
+        	vtimer_data[vtimer_id].vtimer_time += TIMER_INTERVAL;
+        	if(vtimer_data[vtimer_id].vtimer_time >= vtimer_data[vtimer_id].vtimer_delay)
+        	{
+	        	if(vtimer_data[vtimer_id].vtimer_loop == AK_FALSE)
+	    		{
+	    			vtimer_data[vtimer_id].vtimer_state = TIMER_INACTIVE;
+	    		}
+				else
+				{
+					vtimer_data[vtimer_id].vtimer_time = 0;
+				}
+            	vtimer_data[vtimer_id].callback_func(vtimer_id, vtimer_data[vtimer_id].vtimer_delay);
+        	}
         }
     }
 }

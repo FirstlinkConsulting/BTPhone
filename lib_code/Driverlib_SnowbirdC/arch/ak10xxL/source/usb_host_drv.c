@@ -186,6 +186,7 @@ T_VOID usb_host_device_enable(T_U32 mode)
 
     //enable usb clock
     sys_module_enable(eVME_USB_CLK, AK_TRUE);
+    sys_module_reset(eVME_USB_CLK);
 
     //clear usb interrupt status
     usb_host_read_ep_int_reg(&usb_ep_int_tx, &usb_ep_int_rx);

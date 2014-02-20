@@ -102,7 +102,9 @@ T_VOID set_interface(T_eCARD_INTERFACE cif, T_U8 bus_mode)
 {
     if(INTERFACE_NOT_SD != cif)
     {
+    #if (DRV_SUPPORT_SPI_BOOT == 0)  
         g_clk_map |= CLK_MCI_EN;
+    #endif    
         store_int(INT_EN_L2);
 
         //select pin share
@@ -157,7 +159,9 @@ T_VOID set_interface(T_eCARD_INTERFACE cif, T_U8 bus_mode)
         sys_module_enable(eVME_MCI2_CLK, AK_FALSE);
         sys_share_pin_unlock(s_PinSelect);
         restore_int();
+        #if (DRV_SUPPORT_SPI_BOOT == 0)  
         g_clk_map &= ~CLK_MCI_EN;
+        #endif
     }
 }
 
@@ -209,7 +213,7 @@ T_VOID set_clock(T_U32 sd_clk, T_U32 asic_freq, T_BOOL pwr_save)
         if (pwr_save)
             reg_value |= PWR_SAVE_ENABLE;
     }
-    
+    #if (DRV_SUPPORT_SPI_BOOT == 0)  
     if (0 == (g_clk_map & CLK_MCI_EN))
     {
         if (MCI1_MODULE_BASE_ADDR == s_SdReg_Base)
@@ -219,13 +223,14 @@ T_VOID set_clock(T_U32 sd_clk, T_U32 asic_freq, T_BOOL pwr_save)
             
         sys_module_enable(module, AK_TRUE);
     }
-    
+    #endif
     REG32(s_SdReg_Base + oSD_CLK_CTRL) = reg_value;
-    
+    #if (DRV_SUPPORT_SPI_BOOT == 0)  
     if (0 == (g_clk_map & CLK_MCI_EN))    
     {
         sys_module_enable(module, AK_FALSE);
     }
+    #endif
 }
 
 /**

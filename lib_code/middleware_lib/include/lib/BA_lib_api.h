@@ -9,7 +9,7 @@ extern "C" {
 #include "anyka_types.h"
 #include "BA_user_msg.h"
 
-#define  BA_LIB_VERSION_STRING "BlueA_V1.0.06"
+#define  BA_LIB_VERSION_STRING "BlueA_V1.0.06_svn727"
 
 
 typedef T_pVOID   (*BA_CALLBACK_FUN_MALLOC)(T_U32 size, T_CHR * fun, T_U32 line); 
