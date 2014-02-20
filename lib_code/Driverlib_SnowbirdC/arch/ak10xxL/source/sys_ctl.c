@@ -106,10 +106,8 @@ static T_BOOL analog_interrupt_handler(T_VOID)
 #if !(HP_MODE_DC > 0)
     if (reg_status & INT_STA_HP)
     {
-    #if (DETECT_DEV_MAX >0)
         //假装成GPIO中断，欺骗DETECTOR模块
         gpio_int_detect_chk(HP_DETECT_GPIO, LEVEL_HIGH);
-    #endif
     }
 #endif
     REG32(REG_INT_ANALOG) |= reg_status;
@@ -547,9 +545,8 @@ T_VOID restore_base_reg(T_VOID *reg_buf)
     
     timer_restore(backup->m_timer2_cnt);
     clk_set_pll(DEF_PLL_VAL);
-    //init function move to prog_manage of platform
-    //pmu_init();
-    //analog_init();
+    pmu_init();
+    analog_init();
 }
 
 /*******************************************************************************

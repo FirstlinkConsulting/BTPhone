@@ -103,5 +103,5 @@ T_VOID Fwl_GpioSetCallback(T_fGPIO_CB callback_func)
 
 T_VOID Fwl_GpioSetStateRTS(T_BOOL bState)
 {
-	//uart_setstateRTS(uart_id,bState);
+	//uart_setstateRTS(uart_id,bState);	//temp
 }

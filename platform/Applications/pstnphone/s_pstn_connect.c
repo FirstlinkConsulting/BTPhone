@@ -8,7 +8,7 @@ void initpstn_connect(void)
 {
 }
 
-void handlepstn_connect(void)
+unsigned char handlepstn_connect(T_EVT_CODE event, T_EVT_PARAM *pEventParm)
 {
 }
 

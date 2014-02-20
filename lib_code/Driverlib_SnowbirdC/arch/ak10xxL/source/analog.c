@@ -1204,7 +1204,7 @@ static T_BOOL check_cov_finish(T_VOID)
     }
 
     //chip bug, the value that write to 0x00400070 will also write to 0x00400078
-    reg_value = REG32(REG_ADC1_STA);
+    reg_value = REG32(REG_ANALOG_CTRL5);
     reg_value &= ~ADC1_COV_STATE;
     REG32(REG_ADC1_STA) = reg_value;
 
@@ -1282,6 +1282,7 @@ T_U32 analog_getvoltage_keypad(T_VOID)
     return data;
 }
 
+
 #if (DETECT_MODE_ADC > 0)
 /*******************************************************************************
  * @brief   get the voltage of detection.
@@ -1329,7 +1330,6 @@ T_U32 analog_getvoltage_detection(T_VOID)
 #define ADC1_DIV            (12000000/ADC1_WORK_CLK - 1)
 #endif
 
-#pragma arm section code = "_drvbootinit_"
 /*******************************************************************************
  * @brief   init analog. Mainly to configurate some parameters of the analog
  * @author  zhanggaoxin
@@ -1346,15 +1346,17 @@ T_VOID analog_init(T_VOID)
     //set adc1 working clk
     reg_value &= ~((7 << ADC1_DIV_L) | (3UL << ADC1_DIV_H));
     reg_value |= (((ADC1_DIV & 7) << ADC1_DIV_L) | 
-                 (((ADC1_DIV>>3) & 0x3ul)<< ADC1_DIV_H) | ADC1_RESET_DIS);
+                 (((ADC1_DIV>>3) & 0x3ul)<< ADC1_DIV_H));
     REG32(REG_CLOCK_DIV2) = reg_value;
 
-    adc1_open();
     reg_value = REG32(REG_ADC1_CFG);
     //reset adc1
     reg_value |= ADC1_RESET;
+    REG32(REG_ADC1_CFG) = reg_value;
+    REG32(REG_CLOCK_DIV2) &= ~ADC1_RESET_DIS;
+
     //enable ain0 and ain1 wakeup signal input
-	reg_value |= (AIN0_WAKEUP_EN);//AIN1_WAKEUP_EN 这个位在10C 芯片上属于保留位
+    reg_value |= (AIN0_WAKEUP_EN | AIN1_WAKEUP_EN);
     //set bat division ratio = 1/3
     reg_value &= ~BAT_DIV_2;
     //set adc1 vref 3.3V
@@ -1368,7 +1370,7 @@ T_VOID analog_init(T_VOID)
     //clear adc1 reset
     reg_value &= ~ADC1_RESET;
     REG32(REG_ADC1_CFG) = reg_value;
-    adc1_close();
+    REG32(REG_CLOCK_DIV2) |= ADC1_RESET_DIS;
 
     REG32(REG_ANALOG_CTRL1) &= ~(0x6U << DISCHG_HP);
     REG32(REG_ANALOG_CTRL1) &= ~PD_BIAS;
@@ -1393,12 +1395,7 @@ T_VOID analog_init(T_VOID)
 
     //set MIC_VDD low level
     REG32(REG_ANALOG_CTRL3) &= ~(CONNECT_VCM3 | CONNECT_AVCC);
-
-    reg_value = REG32(REG_ADC1_STA);
-    reg_value &= ~ADC1_COV_STATE;
-    REG32(REG_ADC1_STA) = reg_value;
 }
-#pragma arm section code
 
 #endif
 

@@ -19,7 +19,6 @@
 #include "drv_module.h"
 #include "arch_init.h"
 #include "drv_cfg.h"
-#include "drv_module.h"
 
 
 #if (USLAVE_USE_INTR > 0)
@@ -226,7 +225,7 @@ static T_U8 s_UdiskString2[] =
 
 static T_U8 s_UdiskString3[] = 
 {
-    26,
+    22,
     0x03,
     '0',0,
     '1',0,
@@ -237,8 +236,6 @@ static T_U8 s_UdiskString3[] =
     '6',0,
     '7',0,
     '8',0,
-    '9',0,
-    '9',0,
     '9',0
 };
 #if (CHIP_SEL_10C > 0)
@@ -247,39 +244,6 @@ T_VOID usb_set_ExtCmdCallbak(T_fUSB_SCSI_EXT_CALLBACK cmd_proc)
     ext_cmd_call = cmd_proc;
 }
 #endif
-
-T_S32 udisk_wait_event(T_U8 stage, T_U32 event, T_U32 times)
-{
-    T_U32 i;
-    T_S32 status;
-    
-    for(i = 0; i < times; i++)
-    {
-        status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK, event, 1);
-        if (DRV_MODULE_SUCCESS == status)
-        {
-            return DRV_MODULE_SUCCESS;
-        }
-        else if(DRV_MODULE_TIMEOUT == status)
-        {
-            if(msc_get_stage() != stage)
-            {
-                drv_print("[r]", 0, 1);
-                return DRV_MODULE_TIMEOUT;
-            }
-            else
-                continue;
-        }
-        else
-        {
-            drv_print("[wait error at stage]:", stage, AK_TRUE);
-            return DRV_MODULE_ERROR;
-        }
-    }
-
-    drv_print("[wait timeout at stage]:", stage, AK_TRUE);
-    return DRV_MODULE_TIMEOUT;
-}
 
 /** 
  * @brief init  str desc with  reference to device desc
@@ -413,7 +377,7 @@ T_BOOL usbdisk_init(T_U32 mode)
     
     drv_print("usbdisk buffer ok, buffer num:",i, AK_TRUE);
 
-    init_serial_number();
+    //init_serial_number();
 
 #if USB_VAR_MALLOC > 0
     DrvModule_Init();
@@ -1031,8 +995,7 @@ static T_BOOL udisk_request_sense_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* 
 
     {
         case MSC_STAGE_DATA_IN:
-            //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);            
-            status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
+            status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
             if (DRV_MODULE_SUCCESS != status)
             {
                 drv_print("wait EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -1188,8 +1151,7 @@ static T_BOOL udisk_mass_boot_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
         case MSC_STAGE_DATA_IN:
             do
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -1292,8 +1254,7 @@ static T_BOOL udisk_mass_boot_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
         case MSC_STAGE_DATA_OUT:
             do
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_OUT, EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait EVENT_USB_RX_FINISH fail or timeout 0x", status, AK_TRUE);
@@ -1390,8 +1351,7 @@ static T_BOOL udisk_read10_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
                 sectors_per_buf = UDISK_READ_BUF_LEN /s_pUdisk->tLunInfo[pMsg->ucLun].BlkSize;
                 do
                 {
-                    //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
-                    status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
+                    status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucReadIndex), 1000);
                     if (DRV_MODULE_SUCCESS != status)
                     {
                         drv_print("wait EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucReadIndex, AK_TRUE);
@@ -1470,9 +1430,6 @@ static T_BOOL udisk_read10_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
             break;
         //usb-if cv test case10,data out stall may be too late,so call udisk_write10_proc()
         case MSC_STAGE_DATA_OUT:
-            //set RX finish event [m]2013-09-13
-            DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex));
-
             if(!udisk_write10_proc(pMsg,csw_status,res))
             {
                 return AK_FALSE;
@@ -1508,8 +1465,7 @@ static T_BOOL udisk_write10_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
             sectors_per_buf = UDISK_WRITE_BUF_LEN /s_pUdisk->tLunInfo[pMsg->ucLun].BlkSize;
             do
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_OUT, EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucWriteIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait EVENT_USB_RX_FINISH fail or timeout 0x", status, AK_TRUE);
@@ -1596,8 +1552,7 @@ static T_BOOL udisk_read_capacity_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* 
             }
             else
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait  EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -1668,8 +1623,7 @@ static T_BOOL udisk_read_format_capacity_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,
             }
             else
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait  EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -1746,8 +1700,7 @@ static T_BOOL udisk_mode_sense6_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* re
             }
             else
             {
-                //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
-                status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
+                status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
                 if (DRV_MODULE_SUCCESS != status)
                 {
                     drv_print("wait  EVENT_USB_TX_FINISH fail ,bufid= ", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -1940,8 +1893,7 @@ static T_BOOL udisk_inquiry_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
 
     {
         case MSC_STAGE_DATA_IN:
-            //status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
-            status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
+            status = DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex), 1000);
             if (DRV_MODULE_SUCCESS != status)
             {
                 drv_print("wait  EVENT_USB_TX_FINISH fail ,bufid=0x", s_pUdisk->tTrans.ucTransIndex, AK_TRUE);
@@ -2136,7 +2088,6 @@ static T_BOOL udisk_userdefine_cmd_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32*
     return AK_TRUE;
 }
 #endif
-
 static T_BOOL udisk_unsupported_cmd_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32* res)
 {
     T_U8 stage;
@@ -2176,20 +2127,13 @@ static T_BOOL udisk_unsupported_cmd_proc(T_pSCSI_MSG pMsg,T_U8* csw_status,T_U32
 static T_BOOL udisk_send_csw_proc(T_U8 csw_status,T_U32 residue)
 {
     T_U8 stage;
-    T_S32 status;
 
     stage = msc_get_stage();
     switch (stage)
 
     {
         case MSC_STAGE_DATA_IN:
-            //DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE, 1000);
-            status = udisk_wait_event(MSC_STAGE_DATA_IN, EVENT_STATUS_STAGE, 1000);
-            if(status != DRV_MODULE_SUCCESS)
-            {
-                return AK_FALSE;
-            }
-            
+            DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE, 1000);
             //device real data is less than host expected data
             if (residue > 0)
             {
@@ -2203,13 +2147,7 @@ static T_BOOL udisk_send_csw_proc(T_U8 csw_status,T_U32 residue)
             msc_send_csw(csw_status,residue);
             break;
         case MSC_STAGE_DATA_OUT:
-            //DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE, 1000);
-            status = udisk_wait_event(MSC_STAGE_DATA_OUT, EVENT_STATUS_STAGE, 1000);
-            if(status != DRV_MODULE_SUCCESS)
-            {
-                return AK_FALSE;
-            }
-            
+            DrvModule_WaitEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE, 1000);
             //device real data is less than host expected data
             if (residue > 0)
             {
@@ -2340,12 +2278,6 @@ static T_VOID udisk_scsi_msg_proc(T_U32* pMsg,T_U32 len)
     }
     else
     {
-        if(MSC_STAGE_READY == msc_get_stage())
-        {
-            drv_print("[rc]", 0, 1);
-            return;
-        }
-
         udisk_error_recovery();
     }
 }
@@ -2549,7 +2481,6 @@ static T_VOID udisk_reset(T_U32 mode)
     //clear all buffer status
     for(i=0; i<UDISK_BUFFER_NUM;i++)
     {
-        DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(i));
         DrvModule_ClrEvent(DRV_MODULE_USB_DISK, EVENT_USB_RX_FINISH(i));
     }
 
@@ -2566,28 +2497,14 @@ static T_VOID udisk_reset(T_U32 mode)
  */
 static T_VOID udisk_suspend()
 {
-    T_U32 EventValue = 0;
     //clr stall status to avoid die when udisk task is waiting clr stall to send csw 
     usb_slave_set_ep_status(USB_BULK_IN_INDEX,0);
     usb_slave_set_ep_status(USB_BULK_OUT_INDEX,0);
     usb_slave_std_hard_stall(AK_FALSE);
 
-    EventValue = DrvModule_GetEventValue();
-    
-    if(0 != (EventValue & (T_U32)EVENT_STATUS_STAGE))
-    {
-        DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE);
-    }
-    
-    if(0 != (EventValue & EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex)))
-    {
-        DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex));
-    }
-    
-    if(0 != (EventValue & EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucTransIndex)))
-    {
-        DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucTransIndex));
-    }
+    DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_STATUS_STAGE);
+    DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_TX_FINISH(s_pUdisk->tTrans.ucTransIndex));
+    DrvModule_SetEvent(DRV_MODULE_USB_DISK,EVENT_USB_RX_FINISH(s_pUdisk->tTrans.ucTransIndex));
 }
 
 /**
@@ -2968,7 +2885,7 @@ static T_VOID init_serial_number()
         }
         else
         {
-            s_UdiskString3[i] = 'A';
+            s_UdiskString3[i] = ' ';
         }
     }
 }

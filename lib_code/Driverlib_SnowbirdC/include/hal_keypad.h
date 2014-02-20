@@ -26,7 +26,7 @@ extern "C" {
 #define LONG_PRESS_TIME             (1000)  ///< 1000ms
 
 //主动检查键值TIMER的时间间隔
-#define KEY_SCAN_TIME               (20)    ///< 20  ms
+#define KEY_SCAN_TIME               (100)   ///< 100 ms
 #define KEY_LOOP_TIME               (10)    ///< 10  ms
 #if (CHIP_SEL_10C > 0)
 #define KEY_LONG_TIME               (110)   ///< 200 ms
@@ -46,7 +46,7 @@ typedef struct
     T_U16               m_min;              ///< AD按键变化的最小值
     T_U16               m_max;              ///< AD按键变化的最大值
 #if (CHIP_SEL_10C > 0) 
-    T_U8                key_id;
+	T_U8 				key_id;
 #endif
 } T_KEY_DET_STR;
 

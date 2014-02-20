@@ -81,6 +81,9 @@ T_BOOL keypad_init(T_fKEYPAD_CALLBACK callback, T_KEYPAD_PARAM *param)
 #if (CHIP_SEL_10C > 0)
     IrDA_init();
 #endif
+    gpio_int_polarity(GPIO_AIN0_INT, LEVEL_HIGH);
+    gpio_int_polarity(POWERKEY_GPIO, LEVEL_HIGH);
+
 
     s_keypad.m_callback = callback;
     s_keypad.m_param = param;
@@ -138,11 +141,9 @@ T_VOID keypad_enable_scan(T_VOID)
 #if (CHIP_SEL_10C > 0)
     IrDA_ScanSwitch(AK_TRUE);
 #endif
-    gpio_int_polarity(GPIO_AIN0_INT, LEVEL_HIGH);
-    gpio_int_polarity(POWERKEY_GPIO, LEVEL_HIGH);
-
     gpio_int_enable(GPIO_AIN0_INT, AK_TRUE);
     gpio_int_enable(POWERKEY_GPIO, AK_TRUE);
+    
 }
 
 /*******************************************************************************
@@ -253,8 +254,8 @@ static T_BOOL keypad_get_cur_key_id(T_KEY_ID *key_id)
 #endif
 
     ad_val = (T_U16)analog_getvoltage_keypad();
-    //drv_print(AK_NULL, ad_val, 1);
-    if ((ad_val < keypad_param->m_ad_val_min) || (ad_val > keypad_param->m_ad_val_max))
+//drv_print(AK_NULL, ad_val, 1);
+    if ((ad_val < keypad_param->m_ad_val_min) && (ad_val > keypad_param->m_ad_val_max))
     {
         return AK_FALSE;
     }
@@ -373,25 +374,16 @@ static T_VOID keypad_steady_timer(T_TIMER timer_id, T_U32 delay)
 
     ret = keypad_get_cur_key_id(&cur_id);
 
-    if (control->m_prev_key_id != cur_id)
-    {
-        if (AK_FALSE == ret)
-        {
-            keypad_enable_scan();
-        }
-        else
-        {
-            control->m_prev_key_id = cur_id;
-            
-            keypad_timer_start(KEY_LOOP_TIME, AK_FALSE, keypad_steady_timer);
-        }
-    }
-    else
+    if (control->m_prev_key_id == cur_id && ret)
     {
         //keypad_send_key(control->m_prev_key_id, 0, eKEYDOWN);//send key down
         control->m_press_time += delay;
 
         keypad_timer_start(KEY_LONG_TIME, AK_TRUE, keypad_state_timer);
+    }
+    else
+    {
+        keypad_enable_scan();
     }
 }
 
@@ -462,11 +454,11 @@ T_KEY_ID keypad_scan(T_VOID)
     while (keypad_get_cur_key_id(&cur_id))
     {
         pre_id = cur_id;
-        //#if (CHIP_SEL_10C > 0)
-        //delay_ms(120);
-        //#else
+        #if (CHIP_SEL_10C > 0)
+        delay_ms(120);
+        #else
         delay_ms(10);
-        //#endif
+        #endif
         if (keypad_get_cur_key_id(&cur_id))
         {
             if (pre_id == cur_id)

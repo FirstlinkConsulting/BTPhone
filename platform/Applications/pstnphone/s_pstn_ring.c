@@ -8,7 +8,7 @@ void initpstn_ring(void)
 {
 }
 
-void handlepstn_ring(void)
+unsigned char handlepstn_ring(T_EVT_CODE event, T_EVT_PARAM *pEventParm)
 {
 }
 

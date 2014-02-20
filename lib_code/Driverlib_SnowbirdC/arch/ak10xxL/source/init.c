@@ -67,14 +67,12 @@ T_VOID drv_init(T_PDRIVE_INITINFO drv_info)
 #if (CHIP_SEL_10C > 0 && DRV_SIMU_UART == 0)
     uart_init(uiUART2, 115200);
 #endif
-    //init function move to prog_manage of platform
-    //pmu_init();
+    pmu_init();
     timer_init();
     gpio_init();
 #ifndef BURN_TOOL
-    //init function move to prog_manage of platform
-    //analog_init();
-    //detector_init();
+    analog_init();
+    detector_init();
 #endif
     //l2_initial();
 #if !(USB_VAR_MALLOC > 0)
@@ -94,10 +92,10 @@ T_VOID drv_init(T_PDRIVE_INITINFO drv_info)
 #if (CAMERA_GC0308 > 0)
     camera_gc0308_reg();
 #endif
-#endif
 
+#endif
 #if (CHIP_SEL_10C > 0)
-    //pwm32k 是给RDA芯片用的，如果FM工作不好，用32K晶振试下
+	//pwm32k 是给RDA芯片用的，如果FM工作不好，用32K晶振试下
     pwm_start_32k_square();
 #endif
 }

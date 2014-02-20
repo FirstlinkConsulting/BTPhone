@@ -718,7 +718,16 @@ T_BOOL ddusbdetecthandle(T_EVT_CODE *event, T_EVT_PARAM **pEventParm)
     {
         AK_DEBUG_OUTPUT("PRE USB IN!!\n ");
         gb.usbstate = AK_TRUE;
-    }    
+    }
+    else
+	{
+		enter_udisk_mode = AK_TRUE;
+        (*pEventParm)->w.Param1 = USB_DETECT_LCD_LOCK;
+        m_triggerEvent(M_EVT_RETURN_ROOT, *pEventParm);
+        m_triggerEvent(M_EVT_USB_DETECT, AK_NULL);
+        stdb_ChangeUSBMode();
+		akerror("enter usbslave detect", 0, 1);
+	}
     return 0;
 }
 

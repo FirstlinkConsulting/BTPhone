@@ -12,14 +12,8 @@
 #include "anyka_cpu.h"
 #include "arch_efuse.h"
 #include "arch_timer.h"
-#include "drv_cfg.h"
 
 
-#if (DRV_SUPPORT_EFUSE > 0)
-#pragma arm section code = "_drvbootcode_"
-#else   //efuse仅作Vref校准使用
-#pragma arm section code = "_drvbootinit_"
-#endif
 /*******************************************************************************
  * @brief   read vendor id or serial id
  * @author  LiuHuadong
@@ -65,6 +59,5 @@ T_U32 efuse_read(T_U8 id)
 
     return efuse_value;
 }
-#pragma arm section code
 
 

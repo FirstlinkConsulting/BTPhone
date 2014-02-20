@@ -16,9 +16,8 @@
 #include "arch_sys_ctl.h"
 #include "hal_int_msg.h"
 #include "pmu.h"
-#include "drv_cfg.h"
 
-#pragma arm section code ="_drvbootinit_"
+
 /*******************************************************************************
  * @brief:  pmu initial
  * @author: zhanggaoxin
@@ -36,7 +35,7 @@ T_VOID pmu_init(T_VOID)
     reg_val = REG32(REG_PMU_CTRL1);
     reg_val |= PMU_PD_CHG;
     reg_val |= PMU_PD_CHG_OCP;
-#if (SWITCH_MODE_SLIDE == 1)
+#ifdef USE_DIP_SWITCH
     //芯片选择拨码开关方式，即电平触发
     reg_val |= PMU_ON_TRIG_SEL;
 #endif
@@ -52,7 +51,6 @@ T_VOID pmu_init(T_VOID)
 
     REG32(REG_POWER_CTRL) |= BUCK12_SWITCH;
 }
-#pragma arm section code
 
 /*******************************************************************************
  * @brief:  enable slide switch or not
@@ -221,7 +219,6 @@ T_BOOL pmu_boost33_sel(LDO33_VOLTAGE voltage)
     return AK_TRUE;
 }
 
-#pragma arm section code ="_drvbootinit_"
 /*******************************************************************************
  * @brief:  select intel vref 1.5
  * @author: zhanggaoxin
@@ -243,7 +240,6 @@ T_BOOL pmu_vref15_sel(VREF_SELECT select)
 
     return AK_TRUE;
 }
-#pragma arm section code
 
 /*******************************************************************************
  * @brief:  configurate trickle charger

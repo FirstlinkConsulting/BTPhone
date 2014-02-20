@@ -371,9 +371,7 @@ T_VOID rtc_set_watchdog_time(T_BOOL en, T_U16 unit)
     //select watchdog operation
     reg_value = rtc_read_reg(RTC_REG7);
     reg_value &= ~(0xf << 10);
-    #if (CHIP_SEL_10C == 0)
     reg_value |= RTC_WATCHDOG_WR;   //snowbirdL chip bug
-    #endif
     rtc_write_reg(RTC_REG7, reg_value);
 
     if(en)
