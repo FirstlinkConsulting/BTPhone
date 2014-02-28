@@ -28,8 +28,9 @@
 //max timer count for timer1
 #define TIMER_NUM_MAX               8
 
-#define PHYSICAL_TIMER              5   /* interrupt every 5 millisecond */
-#define PHYSICAL_TIMER2             2   /* interrupt every 2S*/
+#define PHYSICAL_TIMER1             5   /* interrupt every 5 millisecond */
+#define PHYSICAL_TIMER2             10   /* interrupt every 10 millisecond*/
+#define TICK_TO_SECOND				( 1000 ) //每秒包含的 TICK数目 
 
 //Timer status
 #define TIMER_INACTIVE              0   /* inactive(available) */
@@ -45,8 +46,10 @@
 #define CLK_PER_MS                  (CRYSTAL_CLOCK/1000)
 #define CLK_PER_US                  (CRYSTAL_CLOCK/1000000)
 
-#define CLK_TIMER2                  (CRYSTAL_CLOCK*PHYSICAL_TIMER2)
-#define CLK_TRSHLD                  (CLK_TIMER2 - 1200000)
+#define CLK_TIMER1                  ( CLK_PER_MS * PHYSICAL_TIMER1 )	//频率 ( 26 000 000 /1000 )
+#define CLK_TIMER2                  ( CLK_PER_MS * PHYSICAL_TIMER2 ) //(CRYSTAL_CLOCK*PHYSICAL_TIMER2)
+#define CLK_TRSHLD                  ( ( CLK_PER_MS * PHYSICAL_TIMER2 ) - 1200 )//中断产生的时间
+#define CLK_TICKCOUNT				(CRYSTAL_CLOCK * PHYSICAL_TIMER2)
 
 #define timer_send_message(timer_id, delay) post_int_message(IM_TIMER, timer_id, delay)
 
@@ -70,6 +73,7 @@ typedef struct
 #pragma arm section zidata = "_drvbootbss_"
 static volatile T_TIMER_DATA timer_data[TIMER_NUM_MAX];
 static volatile T_U32 m_second_cnt;
+static volatile T_U32 tickCount;
 T_U32 g_pc_lr;
 #pragma arm section zidata
 
@@ -85,9 +89,10 @@ static const T_CHR err_str[] = ERROR_TIMER_COUNTER;
 T_VOID tick_start(T_VOID)
 {
     m_second_cnt = 0;
+	tickCount = 0;
     //REG32(REG_TIMER2_CTRL) = TIMER_CLEAR_BIT;
-    REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //5s timer
-    REG32(REG_TIMER2_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
+    //REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //2ms timer
+    //REG32(REG_TIMER2_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
 }
 #pragma arm section code
 
@@ -112,14 +117,16 @@ T_VOID timer_init(T_VOID)
         timer_data[i].state = TIMER_INACTIVE;
     }
 
-    REG32(REG_TIMER1_CTRL) = (CLK_PER_MS * PHYSICAL_TIMER);
-    REG32(REG_TIMER1_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
-    REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //5s timer
+	//关闭TIMER1，需要的时候启动TIMER1
+    //REG32(REG_TIMER1_CTRL) = CLK_TIMER1;
+    //REG32(REG_TIMER1_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
+
+    REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //2ms timer
     REG32(REG_TIMER2_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
 
     //enable timer interrupt
     INT_ENABLE(INT_EN_SYSCTL);
-    INT_ENABLE_SCM(INT_EN_TIMER1);
+    //INT_ENABLE_SCM(INT_EN_TIMER1);	//关闭TIMER1
     INT_ENABLE_SCM(INT_EN_TIMER2);
 }
 #pragma arm section code
@@ -133,8 +140,10 @@ T_VOID timer_init(T_VOID)
 *******************************************************************************/
 T_VOID timer_restore(T_U32 timer2_cnt)
 {
-    REG32(REG_TIMER1_CTRL)  = (CLK_PER_MS * PHYSICAL_TIMER);
-    REG32(REG_TIMER1_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
+	//@@lzq 暂时关闭TIMER1
+    //REG32(REG_TIMER1_CTRL)  = (CLK_PER_MS * PHYSICAL_TIMER1);
+    //REG32(REG_TIMER1_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
+
     //retore current timer count
     REG32(REG_TIMER2_CTRL)  = timer2_cnt;
     REG32(REG_TIMER2_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
@@ -154,11 +163,29 @@ T_VOID timer_restore(T_U32 timer2_cnt)
 T_VOID timer2_enable(T_VOID)
 {
 
-    //REG32(REG_TIMER2_CTRL) = TIMER_CLEAR_BIT;
-    REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //5s timer
+    REG32(REG_TIMER2_CTRL) &= ~(TIMER_CLEAR_BIT);
+    REG32(REG_TIMER2_CTRL) = CLK_TIMER2;  //2ms timer
     REG32(REG_TIMER2_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
     INT_ENABLE_SCM(INT_EN_TIMER2);
 }
+
+T_VOID timer1_enable(T_VOID)
+{
+	REG32(REG_TIMER1_CTRL) &= ~(TIMER_CLEAR_BIT);
+	REG32(REG_TIMER1_CTRL) = CLK_TIMER1;  //833us timer
+    REG32(REG_TIMER1_CTRL) |= (TIMER_LOAD_BIT | TIMER_ENABLE_BIT);
+    INT_ENABLE_SCM(INT_EN_TIMER1);
+}
+
+T_VOID timer1_disable(T_VOID)
+{
+   
+	REG32(REG_TIMER1_CTRL) &= ~(TIMER_ENABLE_BIT);
+	REG32(REG_TIMER1_CTRL) = TIMER_CLEAR_BIT;    
+    INT_DISABLE_SCM(INT_EN_TIMER1);
+}
+
+
 #pragma arm section code
 #endif
 
@@ -182,7 +209,7 @@ T_VOID timer2_enable(T_VOID)
 *******************************************************************************/
 T_TIMER timer_start(T_U16 ms, T_BOOL loop, T_fTIMER_CALLBACK callback_func)
 {
-    T_U32 i;
+    volatile T_U32 i;
 
     if (AK_FALSE == MMU_IsPremapAddr((T_U32)callback_func))
     {
@@ -255,9 +282,31 @@ T_TIMER timer_stop(T_TIMER timer_id)
 *******************************************************************************/
 T_VOID timer_interrupt_handler(T_VOID)
 {
-    T_U32 i;
-
     REG32(REG_TIMER1_CTRL) |= TIMER_CLEAR_BIT;
+	drv_print(err_str, g_pc_lr, 1);
+}
+
+/*******************************************************************************
+ * @brief   Timer2 interrupt handler
+ * If chip detect that timer2 counter reach 0, this function will be called.
+ * @author  zhanggaoxin
+ * @date    2012-12-26
+ * @param   T_VOID
+ * @return  T_VOID
+*******************************************************************************/
+T_VOID timer2_interrupt_handler(T_VOID)
+{
+
+    volatile T_U32 i;
+
+    REG32(REG_TIMER2_CTRL) |= TIMER_CLEAR_BIT;
+	tickCount += PHYSICAL_TIMER2;
+    if (  tickCount == TICK_TO_SECOND )
+	{
+		m_second_cnt ++;		//秒计数器自增
+		tickCount = 0;			//TICK计数器归零
+	}
+
 
     for (i=0; i<TIMER_NUM_MAX; i++)
     {
@@ -266,7 +315,7 @@ T_VOID timer_interrupt_handler(T_VOID)
             continue;
         }
 
-        timer_data[i].cur_delay += PHYSICAL_TIMER;
+        timer_data[i].cur_delay += PHYSICAL_TIMER2;
         if (timer_data[i].cur_delay >= timer_data[i].total_delay)
         {
             if (timer_data[i].loop)
@@ -291,21 +340,7 @@ T_VOID timer_interrupt_handler(T_VOID)
             }
         }
     }
-}
 
-/*******************************************************************************
- * @brief   Timer2 interrupt handler
- * If chip detect that timer2 counter reach 0, this function will be called.
- * @author  zhanggaoxin
- * @date    2012-12-26
- * @param   T_VOID
- * @return  T_VOID
-*******************************************************************************/
-T_VOID timer2_interrupt_handler(T_VOID)
-{
-    REG32(REG_TIMER2_CTRL) |= TIMER_CLEAR_BIT;
-    m_second_cnt += PHYSICAL_TIMER2;
-	//drv_print(err_str, g_pc_lr, 1);
 }
 
 /*******************************************************************************
@@ -316,21 +351,20 @@ T_VOID timer2_interrupt_handler(T_VOID)
  * @return  T_U32
  * @retval  the tick count
 *******************************************************************************/
+
 static T_U32 get_tick_count(T_U32 *second)
 {
-    T_U32 cur_tick = 0;
-    T_U32 threshold = CLK_TIMER2 - 1200000;
-
+    volatile T_U32 cur_tick = 0;
+	
     *second = m_second_cnt;
     cur_tick = REG32(REG_TIMER2_CNT) & TIMER_MAX_COUNT;
     //当获取到tick大于设定的阀值时，表示Timer2可能在上述两条语句之间
     //产生了一次中断，此时需要重新读取全局变量。
-    if (cur_tick > threshold)
+    if (cur_tick > CLK_TRSHLD )
     {
         *second = m_second_cnt;
     }
-
-    return (CLK_TIMER2-cur_tick);
+	return (CLK_TIMER2 - cur_tick);
 }
 
 /*******************************************************************************
@@ -344,12 +378,12 @@ static T_U32 get_tick_count(T_U32 *second)
 *******************************************************************************/
 T_U32 get_tick_count_us(T_VOID)
 {
-    T_U32 second;
+    T_U32 Second;
     T_U32 tick;
     T_U32 cur_us = 0;
 
-    tick = get_tick_count(&second);
-    cur_us = (second * 1000000) + (tick / CLK_PER_US);
+    tick = get_tick_count(&Second);
+    cur_us = (Second * 1000000) + (tickCount * 1000) + (tick / CLK_PER_US); //second -秒 tickcount -毫秒 tick -微秒
 
     return cur_us;
 }
@@ -365,12 +399,12 @@ T_U32 get_tick_count_us(T_VOID)
 *******************************************************************************/
 T_U32 get_tick_count_ms(T_VOID)
 {
-    T_U32 second;
+    T_U32 Second;
     T_U32 tick;
     T_U32 cur_ms = 0;
 
-    tick = get_tick_count(&second);
-    cur_ms = (second * 1000) + (tick / CLK_PER_MS);
+    tick = get_tick_count(&Second);
+    cur_ms = (Second * 1000) + tickCount + (tick / CLK_PER_MS);//second -秒 tickcount -毫秒 tick -微秒	
 
     return cur_ms;
 }
